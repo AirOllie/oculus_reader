@@ -63,16 +63,18 @@ class OculusReader:
         device = client.device(self.ip_address + ':' + str(self.port))
 
         if device is None:
-            if retry==1:
-                os.system('adb tcpip ' + str(self.port))
-            if retry==2:
+            if retry < 2:  # Add a limit to retry
+                retry += 1
+                if retry == 1:
+                    os.system('adb tcpip ' + str(self.port))
+                return self.get_network_device(client, retry)
+            else:
                 eprint('Make sure that device is running and is available at the IP address specified as the OculusReader argument `ip_address`.')
                 eprint('Currently provided IP address:', self.ip_address)
                 eprint('Run `adb shell ip route` to verify the IP address.')
                 exit(1)
-            else:
-                self.get_device(client=client, retry=retry+1)
         return device
+
 
     def get_usb_device(self, client):
         try:
@@ -200,7 +202,7 @@ class OculusReader:
 
 
 def main():
-    oculus_reader = OculusReader()
+    oculus_reader = OculusReader(ip_address='192.168.1.78')
 
     while True:
         time.sleep(0.3)
